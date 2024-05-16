@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo de Alfabetização</title>
+    <style>
+       body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0; /* Esta linha pode ser removida para usar apenas a imagem de fundo */
+            background-image: url('https://img.freepik.com/vetores-premium/um-fundo-com-letras-coloridas-de-varios-tamanhos-como-padrao_49459-790.jpg'); /* Adiciona a imagem de fundo */
+            background-size: cover;
+            background-position: center;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            font-size: 36px;
+            color: #4CAF50;
+            margin-top: 20px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        #timer {
+            font-size: 24px;
+            color: #4CAF50;
+            margin-top: 20px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        #countdown {
+            font-size: 36px;
+            font-weight: bold;
+            color: #4CAF50;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        .countdown-container {
+            display: inline-block;
+            background-color: #fff;
+            padding: 10px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        #game-container {
+            margin-top: 20px;
+            width: 90%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .image {
+            width: 100%;
+            height: auto;
+            margin-bottom: 20px;
+            max-width: 300px;
+            transition: transform 0.5s ease;
+        }
+        .letter-button, .start-button {
+            font-size: 24px;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 5px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .letter-button:hover, .start-button:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 2;
+        }
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 5px;
+            width: 80%;
+            max-width: 300px;
+        }
+        .modal-content.correct {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .modal-content.incorrect {
+            background-color: #f44336;
+            color: white;
+        }
+        #logo {
+            width: 200px;
+            height: auto;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Jogo de Alfabetização</h1>
+    <div id="timer">
+        Tempo restante:
+        <div class="countdown-container">
+            <span id="countdown">60</span> segundos
+        </div>
+    </div>
+    <img id="logo" src="https://i.imgur.com/1QQJGAR.png" alt="Logo do Jogo">
+    <br>
+    <button id="start-button" class="start-button">Começar o Jogo</button>
+    <div id="game-container" style="display: none;">
+        <div id="image-container">
+            <img id="current-image" class="image" src="" alt="Imagem">
+        </div>
+        <div id="button-container"></div>
+    </div>
+   <div id="feedback-modal" class="modal">
+    <div class="modal-content">
+        <p id="feedback-text"></p>
+        <button id="restart-button" class="start-button" style="display:none;">Reiniciar Jogo</button>
+    </div>
+</div>
+    </div>
+    <audio id="correct-sound" src="https://ia803202.us.archive.org/2/items/y-2mate.com-som-de-resposta-certa/y2mate.com%20-%20Som%20de%20resposta%20certa.mp3"></audio>
+    <audio id="wrong-sound" src="https://ia800401.us.archive.org/34/items/sons-de-erro/sons%20de%20erro.mp3"></audio>
+    <footer>
+        <p>Desenvolvido por @JOMAR SANTOS@ Coordenador Prof. PAULO TRINDADE</p>
+    </footer>
+    <script>
+        let secondsLeft = 60;
+        let timerInterval;
+        let acertos = 0;
+        let erros = 0;
+        let gameStarted = false;
+
+        function updateCountdown() {
+            const countdownElement = document.getElementById('countdown');
+            countdownElement.textContent = secondsLeft;
+
+            if (secondsLeft <= 0) {
+                clearInterval(timerInterval);
+                endGame(); // Chama a função endGame quando o tempo acabar
+            } else {
+                secondsLeft--;
+            }
+        }
+
+        const images = [
+            { src: "https://img.freepik.com/vetores-premium/alfabeto-mao-colorida-desenhar-bolhas-letra-a_769200-1006.jpg", letter: "A" },
+            { src: "https://img.myloview.com.br/fotomurais/carater-da-letra-b-dos-desenhos-animados-700-124302656.jpg", letter: "B" },
+            { src: "https://img3.stockfresh.com/files/c/cthoman/m/95/9318864_stock-vector-cartoon-letter-c-bug.jpg", letter: "C" },
+ { src: "https://img.freepik.com/vetores-premium/letra-d-do-alfabeto-de-desenho-vetorial_853066-29.jpg", letter: "D" },
+ {  src: "https://previews.123rf.com/images/cthoman/cthoman1507/cthoman150701643/42466284-uma-ilustra%C3%A7%C3%A3o-de-desenho-animado-de-uma-letra-e-sorrindo-e-feliz.jpg", letter: "E" },
+ { src: "https://img3.stockfresh.com/files/c/cthoman/m/58/9169022_stock-vector-cartoon-letter-f.jpg", letter: "F" },
+ { src: "https://img.myloview.com.br/fotomurais/personagem-de-desenho-animado-letra-g-700-124913947.jpg", letter: "G" },
+ { src: "https://img.freepik.com/vetores-premium/livro-de-paginas-para-colorir-alfabeto-para-criancas-letras-do-alfabeto-vetor-desenhadas-a-mao-assinar-conjunto-de-fontes-doodle-ilustracao-vetorial_419010-1193.jpg", letter: "H" },
+ { src: "https://static.vecteezy.com/ti/vetor-gratis/p3/7739315-letra-i-do-alfabeto-ingles-letras-latinas-desenhado-a-mao-letras-sinais-doodle-fonte-ilustracao-letras-do-alfabeto-em-estilo-de-cartoon-para-criancas-vetor.jpg", letter: "I" },
+ { src: "https://cdn5.colorir.com/desenhos/color/201517/letra-j-letras-e-numeros-maiusculas-1067577.jpg", letter: "J" },
+ { src: "https://img.freepik.com/vetores-premium/ilustracao-criativa-do-vetor-da-letra-k-do-alfabeto-ingles_853066-38.jpg", letter: "K" },
+ { src: "https://img.freepik.com/vetores-premium/ilustracao-criativa-do-vetor-da-letra-l-do-alfabeto-ingles_853066-39.jpg", letter: "L" },
+ { src: "https://img.myloview.com.br/adesivos/carater-de-letra-m-dos-desenhos-animados-700-124913951.jpg", letter: "M" },
+ { src: "https://img.freepik.com/vetores-premium/personagem-de-desenho-animado-criativo-da-letra-n_853066-41.jpg", letter: "N" },
+ { src: "https://img.myloview.com.br/posters/personagem-de-desenho-animado-letra-o-700-124913953.jpg", letter: "O" },
+ { src: "https://img.freepik.com/vetores-premium/ilustracao-criativa-do-vencedor-do-personagem-de-desenho-animado-da-letra-p-em-ingles_853066-44.jpg", letter: "P" },
+ {  src: "https://img.freepik.com/vetores-premium/ilustracao-criativa-do-vencedor-do-personagem-de-desenho-animado-da-letra-q-em-ingles_853066-45.jpg", letter: "Q" },
+ {  src: "https://img.myloview.com.br/adesivos/personagem-de-desenho-animado-letra-r-700-124913956.jpg", letter: "R"},
+ {  src: "https://img.freepik.com/vetores-premium/ilustracao-criativa-do-vencedor-do-personagem-de-desenho-animado-da-letra-s-em-ingles_853066-47.jpg", letter: "S" },
+ {  src: "https://img.myloview.com.br/adesivos/carater-da-letra-t-dos-desenhos-animados-700-125264446.jpg", letter: "T" },
+ {  src: "https://img.freepik.com/vetores-premium/ilustracao-criativa-do-vencedor-do-personagem-de-desenho-animado-da-letra-u-em-ingles_853066-49.jpg", letter: "U" },
+ {  src: "https://img.freepik.com/vetores-premium/ilustracao-criativa-do-vencedor-do-personagem-de-desenho-animado-da-letra-v-em-ingles_853066-50.jpg", letter: "V" },
+ {  src: "https://img.freepik.com/vetores-premium/ilustracao-criativa-do-vencedor-do-personagem-de-desenho-animado-da-letra-w-em-ingles_853066-51.jpg", letter: "W" },
+ {  src: "https://previews.123rf.com/images/cthoman/cthoman1507/cthoman150701603/42466176-uma-ilustra%C3%A7%C3%A3o-de-desenho-animado-de-uma-letra-x-sorrindo-e-feliz.jpg", letter: "X" },
+{  src: "https://img.myloview.com.br/adesivos/carater-da-letra-y-dos-desenhos-animados-700-125582110.jpg", letter: "Y" },
+{  src: "https://img.freepik.com/vetores-premium/ilustracao-criativa-do-vencedor-do-personagem-de-desenho-animado-da-letra-z-em-ingles_853066-53.jpg", letter: "Z" },
+            // Adicione mais imagens conforme necessário
+        ];
+
+        function startGame() {
+            if (!gameStarted) {
+                gameStarted = true;
+                secondsLeft = 60; // Reset timer
+                updateCountdown();
+                timerInterval = setInterval(updateCountdown, 1000);
+            }
+            
+            const randomIndex = Math.floor(Math.random() * images.length);
+            const currentImage = images[randomIndex];
+            document.getElementById('current-image').src = currentImage.src;
+
+            const buttonContainer = document.getElementById('button-container');
+            buttonContainer.innerHTML = '';
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+            letters.forEach(letter => {
+                const button = document.createElement('button');
+                button.textContent = letter;
+                button.className = 'letter-button';
+                button.addEventListener('click', () => checkAnswer(letter, currentImage.letter));
+                buttonContainer.appendChild(button);
+            });
+            document.getElementById('game-container').style.display = 'block';
+        }
+
+        function checkAnswer(selectedLetter, correctLetter) {
+            const feedbackModal = document.getElementById('feedback-modal');
+            const feedbackText = document.getElementById('feedback-text');
+            const modalContent = feedbackModal.querySelector('.modal-content');
+            const correctSound = document.getElementById('correct-sound');
+            const wrongSound = document.getElementById('wrong-sound');
+
+            if (selectedLetter === correctLetter) {
+                feedbackText.textContent = 'Correto! Parabéns!';
+                modalContent.className = 'modal-content correct';
+                correctSound.play();
+                acertos++; // Incrementa o contador de acertos
+            } else {
+                feedbackText.textContent = 'Incorreto. Tente novamente.';
+                modalContent.className = 'modal-content incorrect';
+                wrongSound.play();
+                erros++; // Incrementa o contador de erros
+            }
+            
+            feedbackModal.style.display = 'block';
+            setTimeout(() => {
+                feedbackModal.style.display = 'none';
+                startGame();
+            }, 2000);
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            gameStarted = false;
+            const feedbackModal = document.getElementById('feedback-modal');
+            const feedbackText = document.getElementById('feedback-text');
+            const restartButton = document.getElementById('restart-button');
+            
+            feedbackText.textContent = `Fim do Jogo! Acertos: ${acertos}, Erros: ${erros}`;
+            restartButton.style.display = 'block'; // Mostra o botão de reiniciar
+            feedbackModal.style.display = 'block';
+        }
+
+        document.getElementById('restart-button').addEventListener('click', restartGame);
+
+        function restartGame() {
+            document.getElementById('feedback-modal').style.display = 'none'; // Esconde o modal
+            document.getElementById('restart-button').style.display = 'none'; // Esconde o botão de reiniciar
+            document.getElementById('start-button').style.display = 'block'; // Mostra o botão de começar
+            document.getElementById('game-container').style.display = 'none'; // Esconde o container do jogo
+
+            // Reseta o estado do jogo
+            acertos = 0;
+            erros = 0;
+            startGame();
+        }
+
+        document.getElementById('start-button').addEventListener('click', function() {
+            this.style.display = 'none';
+            startGame();
+        });
+    </script>
+</body>
+</html>
